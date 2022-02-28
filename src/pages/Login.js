@@ -38,6 +38,10 @@ class Login extends React.Component {
     );
   };
 
+  /* saveAndRedirect = (param) => {
+    this.handleClick(param);
+  } */
+
   render() {
     const { disabled, email, senha, redirect } = this.state;
     const { handleClick } = this.props;
