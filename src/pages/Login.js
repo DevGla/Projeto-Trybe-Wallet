@@ -1,7 +1,6 @@
 import { PropTypes } from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
-import { Redirect } from 'react-router-dom';
 import { saveEmail } from '../actions';
 
 // Regex para validar os caracteres do email
@@ -16,7 +15,6 @@ class Login extends React.Component {
       disabled: true,
       email: '',
       senha: '',
-      redirect: false,
     };
   }
 
@@ -38,13 +36,20 @@ class Login extends React.Component {
     );
   };
 
-  /* saveAndRedirect = (param) => {
-    this.handleClick(param);
-  } */
+  // O raciocínio desta função (saveAndRedirect) foi feito com a ajuda do Estudante Jonatas Queiroz;
+  // E feito com consulta neste repositório:
+  // Link: https://github.com/tryber/sd-017-project-trybewallet/tree/jonatas-queiroz-project-trybewallet
+
+  saveAndRedirect = (event) => {
+    event.preventDefault();
+    const { email } = this.state;
+    const { userLogin, history } = this.props;
+    userLogin(email);
+    history.push('/carteira');
+  }
 
   render() {
-    const { disabled, email, senha, redirect } = this.state;
-    const { handleClick } = this.props;
+    const { disabled, email, senha } = this.state;
     return (
       <div>
         <form>
@@ -74,12 +79,11 @@ class Login extends React.Component {
           <button
             type="button"
             disabled={ disabled }
-            onClick={ () => handleClick(email) }
+            onClick={ this.saveAndRedirect }
           >
             Entrar
           </button>
         </form>
-        {redirect ? <Redirect to="/carteira" /> : ''}
       </div>
     );
   }
@@ -87,13 +91,14 @@ class Login extends React.Component {
 
 const mapDispatchToProps = (dispatch) => (
   {
-    handleClick: (email) => {
+    userLogin: (email) => {
       dispatch(saveEmail(email));
     },
   });
 
 Login.propTypes = {
-  handleClick: PropTypes.func.isRequired,
+  userLogin: PropTypes.func.isRequired,
+  history: PropTypes.func.isRequired,
 };
 
 export default connect(null, mapDispatchToProps)(Login);
