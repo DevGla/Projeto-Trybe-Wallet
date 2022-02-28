@@ -82,7 +82,7 @@ describe('1 - Crie uma página inicial de login com os seguintes campos e caract
     userEvent.type(email, VALID_EMAIL);
     userEvent.type(senha, VALID_PASSWORD);
     fireEvent.click(button);
-
+    console.log(store.getState().user.email, VALID_EMAIL);
     expect(store.getState().user.email).toBe(VALID_EMAIL);
   });
 
