@@ -23,11 +23,8 @@ class AdicaoDespesas extends React.Component {
   // LINK PARA REPOSITÓRIO DO MESMO: https://github.com/tryber/sd-017-project-trybewallet/tree/willian-alves-project-trybe-wallet
   componentDidMount() {
     requisicaoAPI().then((data) => {
-      console.log(data);
-      console.log(Object.entries(data));
       const coin = Object.entries(data).filter(([key]) => key !== 'USDT')
         .map(([, value]) => value.code);
-      console.log(coin);
       this.setState({ coins: coin });
     });
   }
@@ -43,9 +40,9 @@ class AdicaoDespesas extends React.Component {
 
   saveAndDispatch = () => {
     const { handleClick } = this.props;
-    const { valor, descricao, moeda, select, selected2, id } = this.state;
+    const { valor, descricao, moeda, select, selected2, id, currency } = this.state;
     this.setState((currentState) => ({ id: currentState.id + 1 }));
-    const state = { valor, descricao, moeda, select, selected2, id };
+    const state = { valor, descricao, moeda, select, selected2, id, currency };
     handleClick(state);
   }
 
@@ -54,7 +51,6 @@ class AdicaoDespesas extends React.Component {
     return (
       <div>
         <form>
-          { coins }
           <label htmlFor="valor">
             Valor de gastos:
             <input
@@ -77,14 +73,14 @@ class AdicaoDespesas extends React.Component {
               onChange={ this.handleChange }
             />
           </label>
-          <label htmlFor="coin">
-            Coin:
+          <label htmlFor="currency">
+            moeda:
             <select
               onChange={ this.handleChange }
               name="currency"
               value={ currency }
               data-testid="currency-input"
-              id="coin"
+              id="currency"
               aria-label="moeda"
             >
               { coins.length > 0 && coins.map((moedas) => (
@@ -127,6 +123,21 @@ class AdicaoDespesas extends React.Component {
             Adicionar Despesas
           </button>
         </form>
+        <table>
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Tag</th>
+              <th>Método de pagamento</th>
+              <th>Valor</th>
+              <th>Moeda</th>
+              <th>Câmbio utilizado</th>
+              <th>Valor convertido</th>
+              <th>Moeda de conversão</th>
+              <th>Editar/Excluir</th>
+            </tr>
+          </thead>
+        </table>
       </div>
     );
   }
