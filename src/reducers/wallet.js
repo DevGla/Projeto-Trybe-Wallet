@@ -6,6 +6,8 @@ import { SAVE_STATE } from '../actions';
 const STATE_INICIAL = {
   currencies: [],
   expenses: [],
+  id: -1,
+  soma: 0,
 };
 
 const wallet = (state = STATE_INICIAL, action) => {
@@ -13,7 +15,15 @@ const wallet = (state = STATE_INICIAL, action) => {
   case SAVE_STATE:
     return {
       ...state,
-      expenses: [...state.expenses, action.state],
+      id: state.id + 1,
+      total: state.soma + action.soma,
+      expenses: [
+        ...state.expenses,
+        {
+          ...action.payload,
+          id: state.id + 1,
+        },
+      ],
     };
   default:
     return state;

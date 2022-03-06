@@ -9,13 +9,14 @@ class AdicaoDespesas extends React.Component {
     super();
 
     this.state = {
-      valor: '',
-      descricao: '',
-      currency: '',
-      selected: '',
-      selected2: '',
-      id: 0,
-      coins: [],
+      value: 0,
+      description: '',
+      currency: 'USD',
+      method: '',
+      tag: '',
+      coins: '',
+      soma: '',
+      exchangeRates: '',
     };
   }
 
@@ -34,42 +35,78 @@ class AdicaoDespesas extends React.Component {
       {
         [id]: value,
       },
-      this.validate,
     );
   };
 
-  saveAndDispatch = () => {
+  totalExpenses = (data, state) => {
+    const list = Object.entries(data);
+    const { currency } = this.state;
+    const totalAsk = list.filter(([key]) => key === currency)
+      .map(([, value]) => value.ask);
+    return Number(totalAsk) * Number(state);
+  }
+
+  handleExpense = () => {
     const { handleClick } = this.props;
-    const { valor, descricao, moeda, select, selected2, id, currency } = this.state;
-    this.setState((currentState) => ({ id: currentState.id + 1 }));
-    const state = { valor, descricao, moeda, select, selected2, id, currency };
-    handleClick(state);
+    const {
+      value,
+      currency,
+      method,
+      tag,
+      description,
+      exchangeRates,
+      soma,
+    } = this.state;
+    const expense = { value, currency, method, tag, description, exchangeRates };
+    handleClick(expense, Number(soma));
+  }
+
+  saveAndDispatch = async () => {
+    await requisicaoAPI().then((data) => {
+      this.setState((prevState) => ({
+        exchangeRates: data,
+        soma: this.totalExpenses(data, prevState.value),
+      }), this.handleExpense);
+    });
+    this.setState({
+      value: 0,
+    });
   }
 
   render() {
-    const { valor, descricao, currency, selected, selected2, coins } = this.state;
+    const { value, description, currency, method, tag, coins } = this.state;
+    const { handleClick,
+      stateUser: { email },
+      stateWallet: { expenses, soma } } = this.props;
     return (
       <div>
+        <header>
+          <h3>TrybeWallet</h3>
+          <p data-testid="email-field">{ email }</p>
+          <p>Total Expense:</p>
+          <p data-testid="total-field">{ soma || 0 }</p>
+          <p data-testid="header-currency-field">BRL</p>
+        </header>
         <form>
-          <label htmlFor="valor">
+          <label htmlFor="value">
             Valor de gastos:
             <input
               type="text"
-              id="valor"
+              id="value"
               data-testid="value-input"
               name="name"
-              value={ valor }
+              value={ value }
               onChange={ this.handleChange }
             />
           </label>
-          <label htmlFor="descricao">
+          <label htmlFor="description">
             Descrição da despesa:
             <input
               type="text"
-              id="descricao"
+              id="description"
               data-testid="description-input"
               name="name"
-              value={ descricao }
+              value={ description }
               onChange={ this.handleChange }
             />
           </label>
@@ -95,30 +132,30 @@ class AdicaoDespesas extends React.Component {
             </select>
           </label>
           <select
-            value={ selected }
+            value={ method }
             onChange={ this.handleChange }
             data-testid="method-input"
-            id="selected"
+            id="method"
           >
-            <option value="dinheiro">dinheiro</option>
-            <option value="cartão de crédito">cartão de crédito</option>
-            <option value="cartão de dbito">cartão de débito</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão de crédito">Cartão de crédito</option>
+            <option value="Cartão de débito">Cartão de débito</option>
           </select>
           <select
-            value={ selected2 }
+            value={ tag }
             onChange={ this.handleChange }
             data-testid="tag-input"
-            id="selected2"
+            id="tag"
           >
-            <option value="alimentação">alimentação</option>
-            <option value="lazer">lazer</option>
-            <option value="trabalho">trabalho</option>
-            <option value="transporte">transporte</option>
-            <option value="saúde">saúde</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Lazer">Lazer</option>
+            <option value="Trabalho">Trabalho</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Saúde">Saúde</option>
           </select>
           <button
             type="button"
-            onClick={ this.saveAndDispatch }
+            onClick={ () => this.saveAndDispatch(handleClick) }
           >
             Adicionar Despesas
           </button>
@@ -137,6 +174,29 @@ class AdicaoDespesas extends React.Component {
               <th>Editar/Excluir</th>
             </tr>
           </thead>
+          <tbody>
+            { expenses && expenses.map((expense) => (
+              <tr key={ expense.id }>
+                <td>{ expense.description }</td>
+                <td>{ expense.tag }</td>
+                <td>{ expense.method }</td>
+                <td>{ Number(expense.value).toFixed(2) }</td>
+                <td>{ expense.exchangeRates[expense.currency].name }</td>
+                <td>
+                  {
+                    Number(expense.exchangeRates[expense.currency].ask).toFixed(2)
+                  }
+                </td>
+                <td>
+                  {
+                    Number(expense.exchangeRates[expense.currency].ask * expense.value)
+                      .toFixed(2)
+                  }
+                </td>
+                <td>Real</td>
+              </tr>
+            )) }
+          </tbody>
         </table>
       </div>
     );
@@ -145,13 +205,20 @@ class AdicaoDespesas extends React.Component {
 
 const mapDispatchToProps = (dispatch) => (
   {
-    handleClick: (state) => {
-      dispatch(saveState(state));
+    handleClick: (state, soma) => {
+      dispatch(saveState(state, soma));
     },
   });
 
+const mapStateToProps = (state) => ({
+  stateUser: state.user,
+  stateWallet: state.wallet,
+});
+
 AdicaoDespesas.propTypes = {
   handleClick: PropTypes.func.isRequired,
+  stateUser: PropTypes.string.isRequired,
+  stateWallet: PropTypes.string.isRequired,
 };
 
-export default connect(null, mapDispatchToProps)(AdicaoDespesas);
+export default connect(mapStateToProps, mapDispatchToProps)(AdicaoDespesas);

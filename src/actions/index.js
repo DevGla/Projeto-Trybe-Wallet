@@ -7,7 +7,8 @@ export const saveEmail = (email) => ({
   email,
 });
 
-export const saveState = (state) => ({
+export const saveState = (state, soma) => ({
   type: SAVE_STATE,
-  state,
+  payload: state,
+  soma,
 });
