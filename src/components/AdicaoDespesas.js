@@ -15,13 +15,14 @@ class AdicaoDespesas extends React.Component {
       method: '',
       tag: '',
       coins: '',
-      soma: '',
+      some: '',
       exchangeRates: '',
+      id: -1,
     };
   }
-
   // FUNÇÃO FEITA COM A AJUDA DA PESSOA ESTUDANTE WILLIAM ALVES
   // LINK PARA REPOSITÓRIO DO MESMO: https://github.com/tryber/sd-017-project-trybewallet/tree/willian-alves-project-trybe-wallet
+
   componentDidMount() {
     requisicaoAPI().then((data) => {
       const coin = Object.entries(data).filter(([key]) => key !== 'USDT')
@@ -31,19 +32,17 @@ class AdicaoDespesas extends React.Component {
   }
 
   handleChange = ({ target: { id, value } }) => {
-    this.setState(
-      {
-        [id]: value,
-      },
-    );
+    this.setState({ [id]: value });
   };
 
-  totalExpenses = (data, state) => {
+  totalExpenses = (data, prevState) => {
+    const { some } = this.state;
     const list = Object.entries(data);
     const { currency } = this.state;
     const totalAsk = list.filter(([key]) => key === currency)
       .map(([, value]) => value.ask);
-    return Number(totalAsk) * Number(state);
+    const multMoeda = Number(totalAsk) * Number(prevState);
+    return Number(multMoeda) + Number(some);
   }
 
   handleExpense = () => {
@@ -55,17 +54,19 @@ class AdicaoDespesas extends React.Component {
       tag,
       description,
       exchangeRates,
-      soma,
+      some,
+      id,
     } = this.state;
-    const expense = { value, currency, method, tag, description, exchangeRates };
-    handleClick(expense, Number(soma));
+    const expense = { value, currency, method, tag, description, exchangeRates, id };
+    handleClick(expense, some);
   }
 
   saveAndDispatch = async () => {
     await requisicaoAPI().then((data) => {
       this.setState((prevState) => ({
         exchangeRates: data,
-        soma: this.totalExpenses(data, prevState.value),
+        some: this.totalExpenses(data, prevState.value),
+        id: prevState.id + 1,
       }), this.handleExpense);
     });
     this.setState({
@@ -73,18 +74,26 @@ class AdicaoDespesas extends React.Component {
     });
   }
 
+  /* deleteDespesa = ({ target }) => {
+    const { stateWallet: { expenses } } = this.props;
+    const newArray = expenses
+      .filter((deleted) => Number(deleted.id) !== Number(target.id));
+    const newTarget = expenses
+      .find((deleted) => Number(deleted.id) === Number(target.id));
+    this.setState((prevState) => (
+      { some: Number(prevState.some) - Number(newTarget.value) }));
+  } */
+
   render() {
-    const { value, description, currency, method, tag, coins } = this.state;
-    const { handleClick,
-      stateUser: { email },
-      stateWallet: { expenses, soma } } = this.props;
+    const { value, description, currency, method, tag, coins, some } = this.state;
+    const { handleClick, stateUser, stateWallet } = this.props;
     return (
       <div>
         <header>
           <h3>TrybeWallet</h3>
-          <p data-testid="email-field">{ email }</p>
+          <p data-testid="email-field">{ stateUser.email.email }</p>
           <p>Total Expense:</p>
-          <p data-testid="total-field">{ soma || 0 }</p>
+          <p data-testid="total-field">{ some || 0 }</p>
           <p data-testid="header-currency-field">BRL</p>
         </header>
         <form>
@@ -175,26 +184,38 @@ class AdicaoDespesas extends React.Component {
             </tr>
           </thead>
           <tbody>
-            { expenses && expenses.map((expense) => (
-              <tr key={ expense.id }>
-                <td>{ expense.description }</td>
-                <td>{ expense.tag }</td>
-                <td>{ expense.method }</td>
-                <td>{ Number(expense.value).toFixed(2) }</td>
-                <td>{ expense.exchangeRates[expense.currency].name }</td>
-                <td>
-                  {
-                    Number(expense.exchangeRates[expense.currency].ask).toFixed(2)
-                  }
-                </td>
-                <td>
-                  {
-                    Number(expense.exchangeRates[expense.currency].ask * expense.value)
-                      .toFixed(2)
-                  }
-                </td>
-                <td>Real</td>
-              </tr>
+            { stateWallet.expenses && stateWallet.expenses.map((expense) => (
+              <div key={ expense.id }>
+                <tr>
+                  <td>{ expense.description }</td>
+                  <td>{ expense.tag }</td>
+                  <td>{ expense.method }</td>
+                  <td>{ Number(expense.value).toFixed(2) }</td>
+                  <td>{ expense.exchangeRates[expense.currency].name }</td>
+                  <td>
+                    {
+                      Number(expense.exchangeRates[expense.currency].ask).toFixed(2)
+                    }
+                  </td>
+                  <td>
+                    {
+                      Number(expense.exchangeRates[expense.currency].ask * expense.value)
+                        .toFixed(2)
+                    }
+                  </td>
+                  <td>Real</td>
+                  <th>
+                    <button
+                      type="button"
+                      data-testid="delete-btn"
+                      /* onClick={ this.deleteDespesa }
+                      id={ expense.id } */
+                    >
+                      Deletar
+                    </button>
+                  </th>
+                </tr>
+              </div>
             )) }
           </tbody>
         </table>
