@@ -4,10 +4,7 @@ import { SAVE_EMAIL } from '../actions';
 // import wallet from './wallet';
 
 const STATE_INICIAL = {
-  email: {
-    type: 'SAVE_EMAIL',
-    email: 'george_lucas@hotmail.com',
-  },
+  email: '',
 };
 
 const user = (state = STATE_INICIAL, action) => {

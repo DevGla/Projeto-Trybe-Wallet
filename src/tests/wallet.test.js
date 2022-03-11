@@ -41,7 +41,7 @@ describe('2 - Crie uma página para sua carteira com as seguintes característic
 describe('3 - Crie um header para a página de carteira contendo as seguintes características:', () => {
   const initial = initialStateHeader;
 
-  test('Um elemento que exiba o email do usuário que fez login.', () => {
+  test.only('Um elemento que exiba o email do usuário que fez login.', () => {
     const { store } = renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     const emailField = screen.getByTestId('email-field');
 
@@ -49,7 +49,7 @@ describe('3 - Crie um header para a página de carteira contendo as seguintes ca
     expect(emailField).toContainHTML(store.getState().user.email);
   });
 
-  test('Crie um campo com a despesa total gerada pela lista de gastos.', () => {
+  test.only('Crie um campo com a despesa total gerada pela lista de gastos.', () => {
     renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     const totalField = screen.getByTestId(TOTAL_FIELD_TEST_ID);
 
@@ -57,7 +57,7 @@ describe('3 - Crie um header para a página de carteira contendo as seguintes ca
     expect(totalField).toContainHTML(INITIAL_VALUE);
   });
 
-  test('Crie um campo que mostre que qual câmbio está sendo utilizado, que será neste caso \'BRL\'', () => {
+  test.only('Crie um campo que mostre que qual câmbio está sendo utilizado, que será neste caso \'BRL\'', () => {
     renderWithRouterAndStore(<Wallet />, '/carteira');
     const exchangeField = screen.getByTestId('header-currency-field');
 
@@ -261,14 +261,14 @@ describe('7 - Implemente a lógica para que a tabela seja alimentada pelo estado
 describe('8 - Crie um botão para deletar uma despesa da tabela contendo as seguintes características:', () => {
   const initial = initialStateWithExpenses;
 
-  test('O botão deve estar dentro do último item da linha da tabela e deve possuir `data-testid="delete-btn"`', () => {
+  test.only('O botão deve estar dentro do último item da linha da tabela e deve possuir `data-testid="delete-btn"`', () => {
     renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     const lastButton = document.getElementsByTagName('tr')[1].lastChild.lastChild;
     expect(lastButton).toBeInTheDocument();
     expect(lastButton.dataset.testid).toBe(BTN_DELETE_TEST_ID);    
   });
   
-  test('Ao ser clicado, o botão deleta a linha da tabela, alterando o estado global.', () => {
+  test.only('Ao ser clicado, o botão deleta a linha da tabela, alterando o estado global.', () => {
     const { store } = renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     const deleteBtn = screen.getAllByTestId(BTN_DELETE_TEST_ID)[0];
     const lineDeleted = document.getElementsByTagName('tr')[1];
@@ -299,7 +299,7 @@ describe('8 - Crie um botão para deletar uma despesa da tabela contendo as segu
     expect(store.getState().wallet.expenses).toStrictEqual(newExpenses);
   });
   
-  test('Ao clicar no botão para remover uma despesa, o valor correspondente deve ser subtraído e a despesa total deve ser atualizada no header', () => {
+  test.only('Ao clicar no botão para remover uma despesa, o valor correspondente deve ser subtraído e a despesa total deve ser atualizada no header', () => {
     const { store } = renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     
     const totalField = screen.getByTestId(TOTAL_FIELD_TEST_ID);

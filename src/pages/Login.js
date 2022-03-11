@@ -18,6 +18,7 @@ class Login extends React.Component {
     };
   }
 
+  /* Função usada para validar o que foi escrito no input e-mail */
   validate = () => {
     const { email, senha } = this.state;
     if (VALIDATE_EMAIL.test(email) && senha.length > PASSWORD_LENGTH) {
@@ -27,6 +28,7 @@ class Login extends React.Component {
     }
   };
 
+  /* Função usada para atualizar o estado com o que foi escrito no input e-mail */
   handleChange = ({ target: { id, value } }) => {
     this.setState(
       {
@@ -40,6 +42,7 @@ class Login extends React.Component {
   // E feito com consulta neste repositório:
   // Link: https://github.com/tryber/sd-017-project-trybewallet/tree/jonatas-queiroz-project-trybewallet
 
+  /* função usada para após o click no botão "entrar" enviar o email através da action para atualizar a store e redirecionar para a página carteira */
   saveAndRedirect = (event) => {
     event.preventDefault();
     const { email } = this.state;
