@@ -14,7 +14,8 @@ export const saveState = (state, soma) => ({
   soma,
 });
 
-export const deleteState = (id) => ({
+export const deleteState = (id, soma) => ({
   type: DELETE_STATE,
   id,
+  soma,
 });

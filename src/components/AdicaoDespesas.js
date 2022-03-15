@@ -3,6 +3,7 @@ import { PropTypes } from 'prop-types';
 import { connect } from 'react-redux';
 import { deleteState, saveState } from '../actions';
 import requisicaoAPI from './requisicao';
+import Header from './Header';
 
 class AdicaoDespesas extends React.Component {
   constructor() {
@@ -17,7 +18,9 @@ class AdicaoDespesas extends React.Component {
       coins: '',
       some: 0,
       exchangeRates: '',
+      arrayRequiso8: '',
       id: 0,
+      buttonEdit: false,
     };
   }
   // FUNÇÃO FEITA COM A AJUDA DA PESSOA ESTUDANTE WILLIAM ALVES
@@ -35,17 +38,6 @@ class AdicaoDespesas extends React.Component {
     this.setState({ [id]: value });
   };
 
-  /* função usada parar fazer a soma entre o que foi escrito(value) e a multiplicação da moeda escolhida(currency) com o valor atual da moeda recebido pela API(ask) */
-  totalExpenses = (data, prevState) => {
-    const { some } = this.state;
-    const list = Object.entries(data);
-    const { currency } = this.state;
-    const totalAsk = list.filter(([key]) => key === currency)
-      .map(([, value]) => value.ask);
-    const multMoeda = Number(totalAsk) * Number(prevState).toFixed(2);
-    return (Number(multMoeda) + Number(some)).toFixed(2);
-  }
-
   /* função usada para transformar o state em uma constante e enviar para a action atualizar a store com o estado(state) e a soma feita na função acima */
   handleExpense = () => {
     const { handleClick } = this.props;
@@ -60,50 +52,105 @@ class AdicaoDespesas extends React.Component {
       id,
     } = this.state;
     const expense = { value, currency, method, tag, description, exchangeRates, id };
+    console.log(some);
     handleClick(expense, some);
   }
 
   /* função chamada após o click do botão Adicionar despesas. Faz uma requisição para popular o state local(exchangesRates), chama a função de soma, atualiza o ,  */
   saveAndDispatch = async () => {
     await requisicaoAPI().then((data) => {
+      const list = Object.entries(data);
+      const { currency } = this.state;
+      const arrays = list.filter(([key]) => key === currency)
+        .map(([, valueAsk]) => valueAsk);
+      this.setState((prevState) => ({
+        arrayRequiso8: [...prevState.arrayRequiso8, arrays],
+        exchangeRates: data,
+      }), this.rodsFunction);
+      /* const totalAsk = list.filter(([key]) => key === currency)
+        .map(([, valueAsk]) => valueAsk.ask); */
+      /* const multMoeda = Number(totalAsk) * Number(value).toFixed(2);
+      console.log(multMoeda);
+      const somaFinal = (Number(multMoeda) + Number(some)).toFixed(2);
+      console.log(somaFinal);
       this.setState((prevState) => ({
         exchangeRates: data,
-        some: this.totalExpenses(data, prevState.value),
+        some: somaFinal,
         id: prevState.id + 1,
-      }), this.handleExpense);
+      }), this.handleExpense); */
     });
     this.setState({
       value: 0,
+      description: '',
+      currency: 'USD',
+      method: '',
+      tag: '',
     });
   }
 
+  rodsFunction = () => {
+    const { arrayRequiso8, some, value } = this.state;
+    console.log(arrayRequiso8);
+    // usar reducer aqui embaixo
+    const totalAsk = arrayRequiso8.map((key) => key.map((key2) => key2.ask));
+    console.log(totalAsk, 'q');
+    const multMoeda = Number(totalAsk) * Number(value);
+    const somaFinal = Number(multMoeda) + Number(some);
+    console.log(some);
+    console.log(somaFinal.toFixed(2));
+    this.setState((prevState) => ({
+      some: Number((prevState.some) + somaFinal).toFixed(2),
+      id: prevState.id + 1,
+    }), this.handleExpense);
+  };
+
   /* funçõa que é chamada após o click no botão "deletar despesas". Quando o click é feito, acontece uma leitura da Store, depois acontece um filtro na store para termos acesso ao objeto com as informações através do id do target clicado, depois acesso o valor ask desse objeto e multiplico esse ask pelo valor digitado, depois diminuo pelo valor da soma do state, chamo a action para atualilzar a store e limpar esse elemento(target) tirando o mesmo da tela renderizando o que sobra na store e depois  atualizo o valor da soma mostrado na tela.  */
   deleteDespesa = ({ target }) => {
-    const { some } = this.state;
-    const { stateWallet: { expenses }, handleDelete } = this.props;
+    const { stateWallet: { expenses, soma }, handleDelete } = this.props;
+    console.log(expenses);
+    console.log(soma);
     const newTarget = expenses
       .find((deleted) => Number(deleted.id) === Number(target.id));
     const valorMult = (
       Number(newTarget.exchangeRates[newTarget.currency].ask) * Number(newTarget.value)
     ).toFixed(2);
-    const valorDiminuido = some - valorMult;
-    handleDelete(newTarget.id);
-    this.setState(() => (
-      { some: valorDiminuido }));
+    const valorDiminuido = (soma - valorMult).toFixed(2);
+    console.log(valorDiminuido);
+    handleDelete(newTarget.id, Number(valorDiminuido));
   }
 
+  /* editarDespesa = ({ target }) => {
+    const targetId = target.id;
+    const { stateWallet: { expenses } } = this.props;
+    console.log(expenses);
+    const elementoClicado = expenses
+      .find((element) => element.id === 2);
+    console.log(elementoClicado);
+    const elementoClicadoTarget = expenses
+      .find((element) => element.id === targetId); */
+  /* this.setState({
+      value: elementoClicado.value,
+      description: elementoClicado.description,
+      currency: elementoClicado.currency,
+      method: elementoClicado.method,
+      tag: elementoClicado.tag,
+      buttonEdit: true,
+    }); */
+  // handleClick(this.state, some);
+  /* } */
+
   render() {
-    const { value, description, currency, method, tag, coins, some } = this.state;
-    const { handleClick, stateWallet, stateUser } = this.props;
+    const { value,
+      description,
+      currency,
+      method,
+      tag,
+      coins,
+      buttonEdit } = this.state;
+    const { handleClick, stateWallet } = this.props;
     return (
       <div>
-        <header>
-          <h3>TrybeWallet</h3>
-          <p data-testid="email-field">{ stateUser.email}</p>
-          <p>Total Expense:</p>
-          <p data-testid="total-field">{ some || 0 }</p>
-          <p data-testid="header-currency-field">BRL</p>
-        </header>
+        <Header />
         <form>
           <label htmlFor="value">
             Valor de gastos:
@@ -170,12 +217,21 @@ class AdicaoDespesas extends React.Component {
             <option value="Transporte">Transporte</option>
             <option value="Saúde">Saúde</option>
           </select>
-          <button
-            type="button"
-            onClick={ () => this.saveAndDispatch(handleClick) }
-          >
-            Adicionar Despesas
-          </button>
+          {buttonEdit ? (
+            <button
+              type="button"
+              onClick={ () => this.editarDespesa }
+            >
+              Editar Despesas
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={ () => this.saveAndDispatch(handleClick) }
+            >
+              Adicionar Despesas
+            </button>
+          )}
         </form>
         <table>
           <thead>
@@ -193,8 +249,8 @@ class AdicaoDespesas extends React.Component {
           </thead>
           <tbody>
             { stateWallet.expenses && stateWallet.expenses.map((expense) => (
-              <div key={ expense.id }>
-                <tr>
+              <div key={ expense.id } id={ expense.id }>
+                <tr id={ expense.id }>
                   <td>{ expense.description }</td>
                   <td>{ expense.tag }</td>
                   <td>{ expense.method }</td>
@@ -215,6 +271,14 @@ class AdicaoDespesas extends React.Component {
                   <th>
                     <button
                       type="button"
+                      data-testid="edit-btn"
+                      onClick={ this.editarDespesa }
+                      id={ expense.id }
+                    >
+                      Editar despesa
+                    </button>
+                    <button
+                      type="button"
                       data-testid="delete-btn"
                       onClick={ this.deleteDespesa }
                       id={ expense.id }
@@ -232,13 +296,27 @@ class AdicaoDespesas extends React.Component {
   }
 }
 
+/* ({ target }) => {
+  const { stateWallet: { expenses, soma }, handleDelete } = this.props;
+  console.log(expenses);
+  console.log(soma);
+  const newTarget = expenses
+    .find((deleted) => Number(deleted.id) === Number(target.id));
+  const valorMult = (
+    Number(newTarget.exchangeRates[newTarget.currency].ask) * Number(newTarget.value)
+  ).toFixed(2);
+  const valorDiminuido = soma - valorMult;
+  console.log(valorDiminuido);
+  handleDelete(newTarget.id, valorDiminuido);
+                      } } */
+
 const mapDispatchToProps = (dispatch) => (
   {
     handleClick: (state, some) => {
       dispatch(saveState(state, some));
     },
-    handleDelete: (id) => {
-      dispatch(deleteState(id));
+    handleDelete: (id, soma) => {
+      dispatch(deleteState(id, soma));
     },
   });
 
@@ -249,7 +327,6 @@ const mapStateToProps = (state) => ({
 
 AdicaoDespesas.propTypes = {
   handleClick: PropTypes.func.isRequired,
-  stateUser: PropTypes.string.isRequired,
   stateWallet: PropTypes.string.isRequired,
   handleDelete: PropTypes.func.isRequired,
 };

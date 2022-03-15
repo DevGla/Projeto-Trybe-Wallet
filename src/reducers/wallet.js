@@ -16,6 +16,7 @@ const wallet = (state = STATE_INICIAL, action) => {
     return {
       ...state,
       id: state.id + 1,
+      soma: action.soma,
       expenses: [
         ...state.expenses,
         {
@@ -28,6 +29,7 @@ const wallet = (state = STATE_INICIAL, action) => {
     return {
       ...state,
       expenses: state.expenses.filter((expense) => expense.id !== action.id),
+      soma: action.soma,
     };
   default:
     return state;
