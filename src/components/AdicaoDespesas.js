@@ -52,32 +52,16 @@ class AdicaoDespesas extends React.Component {
       id,
     } = this.state;
     const expense = { value, currency, method, tag, description, exchangeRates, id };
-    console.log(some);
     handleClick(expense, some);
   }
 
   /* função chamada após o click do botão Adicionar despesas. Faz uma requisição para popular o state local(exchangesRates), chama a função de soma, atualiza o ,  */
   saveAndDispatch = async () => {
     await requisicaoAPI().then((data) => {
-      const list = Object.entries(data);
-      const { currency } = this.state;
-      const arrays = list.filter(([key]) => key === currency)
-        .map(([, valueAsk]) => valueAsk);
-      this.setState((prevState) => ({
-        arrayRequiso8: [...prevState.arrayRequiso8, arrays],
-        exchangeRates: data,
-      }), this.rodsFunction);
-      /* const totalAsk = list.filter(([key]) => key === currency)
-        .map(([, valueAsk]) => valueAsk.ask); */
-      /* const multMoeda = Number(totalAsk) * Number(value).toFixed(2);
-      console.log(multMoeda);
-      const somaFinal = (Number(multMoeda) + Number(some)).toFixed(2);
-      console.log(somaFinal);
       this.setState((prevState) => ({
         exchangeRates: data,
-        some: somaFinal,
         id: prevState.id + 1,
-      }), this.handleExpense); */
+      }), this.handleExpense);
     });
     this.setState({
       value: 0,
@@ -87,22 +71,6 @@ class AdicaoDespesas extends React.Component {
       tag: '',
     });
   }
-
-  rodsFunction = () => {
-    const { arrayRequiso8, some, value } = this.state;
-    console.log(arrayRequiso8);
-    // usar reducer aqui embaixo
-    const totalAsk = arrayRequiso8.map((key) => key.map((key2) => key2.ask));
-    console.log(totalAsk, 'q');
-    const multMoeda = Number(totalAsk) * Number(value);
-    const somaFinal = Number(multMoeda) + Number(some);
-    console.log(some);
-    console.log(somaFinal.toFixed(2));
-    this.setState((prevState) => ({
-      some: Number((prevState.some) + somaFinal).toFixed(2),
-      id: prevState.id + 1,
-    }), this.handleExpense);
-  };
 
   /* funçõa que é chamada após o click no botão "deletar despesas". Quando o click é feito, acontece uma leitura da Store, depois acontece um filtro na store para termos acesso ao objeto com as informações através do id do target clicado, depois acesso o valor ask desse objeto e multiplico esse ask pelo valor digitado, depois diminuo pelo valor da soma do state, chamo a action para atualilzar a store e limpar esse elemento(target) tirando o mesmo da tela renderizando o que sobra na store e depois  atualizo o valor da soma mostrado na tela.  */
   deleteDespesa = ({ target }) => {

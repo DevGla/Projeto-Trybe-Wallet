@@ -11,7 +11,15 @@ class Header extends React.Component {
           <h3>TrybeWallet</h3>
           <p data-testid="email-field">{ stateUser.email}</p>
           <p>Total Expense:</p>
-          <p data-testid="total-field">{ stateWallet.soma || 0 }</p>
+          <p data-testid="total-field">
+            {
+              stateWallet.expenses.reduce((acc, expense) => {
+                const { value, exchangeRates, currency } = expense;
+                const { ask } = exchangeRates[currency];
+                return acc + (value * ask);
+              }, 0)
+            }
+          </p>
           <p data-testid="header-currency-field">BRL</p>
         </header>
       </div>
