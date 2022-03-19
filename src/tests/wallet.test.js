@@ -261,14 +261,14 @@ describe('7 - Implemente a lógica para que a tabela seja alimentada pelo estado
 describe('8 - Crie um botão para deletar uma despesa da tabela contendo as seguintes características:', () => {
   const initial = initialStateWithExpenses;
 
-  test.only('O botão deve estar dentro do último item da linha da tabela e deve possuir `data-testid="delete-btn"`', () => {
+  test('O botão deve estar dentro do último item da linha da tabela e deve possuir `data-testid="delete-btn"`', () => {
     renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     const lastButton = document.getElementsByTagName('tr')[1].lastChild.lastChild;
     expect(lastButton).toBeInTheDocument();
     expect(lastButton.dataset.testid).toBe(BTN_DELETE_TEST_ID);    
   });
   
-  test.only('Ao ser clicado, o botão deleta a linha da tabela, alterando o estado global.', () => {
+  test('Ao ser clicado, o botão deleta a linha da tabela, alterando o estado global.', () => {
     const { store } = renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     const deleteBtn = screen.getAllByTestId(BTN_DELETE_TEST_ID)[0];
     const lineDeleted = document.getElementsByTagName('tr')[1];
@@ -299,7 +299,7 @@ describe('8 - Crie um botão para deletar uma despesa da tabela contendo as segu
     expect(store.getState().wallet.expenses).toStrictEqual(newExpenses);
   });
   
-  test.only('Ao clicar no botão para remover uma despesa, o valor correspondente deve ser subtraído e a despesa total deve ser atualizada no header', () => {
+  test('Ao clicar no botão para remover uma despesa, o valor correspondente deve ser subtraído e a despesa total deve ser atualizada no header', () => {
     const { store } = renderWithRouterAndStore(<Wallet />, '/carteira', initial);
     
     const totalField = screen.getByTestId(TOTAL_FIELD_TEST_ID);

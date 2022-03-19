@@ -1,302 +1,247 @@
 import React from 'react';
-import { PropTypes } from 'prop-types';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { deleteState, saveState } from '../actions';
-import requisicaoAPI from './requisicao';
 import Header from './Header';
+import requisicaoAPI from './requisicao';
+import { deleteState, saveCoin,
+  editState, saveExpense } from '../actions';
 
-class AdicaoDespesas extends React.Component {
+class Wallet extends React.Component {
   constructor() {
     super();
-
     this.state = {
+      id: 0,
       value: 0,
       description: '',
       currency: 'USD',
-      method: '',
-      tag: '',
-      coins: '',
-      some: 0,
-      exchangeRates: '',
-      arrayRequiso8: '',
-      id: 0,
+      method: 'Dinheiro',
+      tag: 'Alimentação',
       buttonEdit: false,
+      exchangeRates: {},
     };
   }
+
   // FUNÇÃO FEITA COM A AJUDA DA PESSOA ESTUDANTE WILLIAM ALVES
   // LINK PARA REPOSITÓRIO DO MESMO: https://github.com/tryber/sd-017-project-trybewallet/tree/willian-alves-project-trybe-wallet
-
+  // Feito antes do novo
   componentDidMount() {
+    const { handleClick } = this.props;
     requisicaoAPI().then((data) => {
       const coin = Object.entries(data).filter(([key]) => key !== 'USDT')
         .map(([, value]) => value.code);
-      this.setState({ coins: coin });
+      handleClick(coin);
     });
   }
 
-  handleChange = ({ target: { id, value } }) => {
-    this.setState({ [id]: value });
-  };
-
-  /* função usada para transformar o state em uma constante e enviar para a action atualizar a store com o estado(state) e a soma feita na função acima */
-  handleExpense = () => {
-    const { handleClick } = this.props;
-    const {
-      value,
-      currency,
-      method,
-      tag,
-      description,
-      exchangeRates,
-      some,
-      id,
-    } = this.state;
-    const expense = { value, currency, method, tag, description, exchangeRates, id };
-    handleClick(expense, some);
-  }
-
-  /* função chamada após o click do botão Adicionar despesas. Faz uma requisição para popular o state local(exchangesRates), chama a função de soma, atualiza o ,  */
-  saveAndDispatch = async () => {
-    await requisicaoAPI().then((data) => {
-      this.setState((prevState) => ({
-        exchangeRates: data,
-        id: prevState.id + 1,
-      }), this.handleExpense);
-    });
+  handleChange = ({ target }) => {
+    const { name } = target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
     this.setState({
-      value: 0,
-      description: '',
-      currency: 'USD',
-      method: '',
-      tag: '',
+      [name]: value,
     });
   }
 
-  /* funçõa que é chamada após o click no botão "deletar despesas". Quando o click é feito, acontece uma leitura da Store, depois acontece um filtro na store para termos acesso ao objeto com as informações através do id do target clicado, depois acesso o valor ask desse objeto e multiplico esse ask pelo valor digitado, depois diminuo pelo valor da soma do state, chamo a action para atualilzar a store e limpar esse elemento(target) tirando o mesmo da tela renderizando o que sobra na store e depois  atualizo o valor da soma mostrado na tela.  */
-  deleteDespesa = ({ target }) => {
-    const { stateWallet: { expenses, soma }, handleDelete } = this.props;
-    console.log(expenses);
-    console.log(soma);
-    const newTarget = expenses
-      .find((deleted) => Number(deleted.id) === Number(target.id));
-    const valorMult = (
-      Number(newTarget.exchangeRates[newTarget.currency].ask) * Number(newTarget.value)
-    ).toFixed(2);
-    const valorDiminuido = (soma - valorMult).toFixed(2);
-    console.log(valorDiminuido);
-    handleDelete(newTarget.id, Number(valorDiminuido));
+  handleClick = async (e) => {
+    e.preventDefault();
+    const { value,
+      description, currency, method, tag, buttonEdit, id, exchangeRates } = this.state;
+    const { expenses, handleSave, handleEdit } = this.props;
+    if (buttonEdit) {
+      const expenseStore = expenses;
+      const obj = { id, value, description, currency, method, tag, exchangeRates };
+      expenseStore.splice(id, 1, obj);
+      handleEdit(expenseStore);
+      this.setState({ buttonEdit: false });
+    } else {
+      const obj = { id: expenses.length, value, description, currency, method, tag };
+      const data = await requisicaoAPI().then((dataExchange) => dataExchange);
+      delete data.USDT;
+      console.log(data);
+      const payload = { ...obj, exchangeRates: data };
+      handleSave(payload);
+    }
+    this.setState({ value: 0 });
   }
 
-  /* editarDespesa = ({ target }) => {
-    const targetId = target.id;
-    const { stateWallet: { expenses } } = this.props;
-    console.log(expenses);
-    const elementoClicado = expenses
-      .find((element) => element.id === 2);
-    console.log(elementoClicado);
-    const elementoClicadoTarget = expenses
-      .find((element) => element.id === targetId); */
-  /* this.setState({
-      value: elementoClicado.value,
-      description: elementoClicado.description,
-      currency: elementoClicado.currency,
-      method: elementoClicado.method,
-      tag: elementoClicado.tag,
-      buttonEdit: true,
-    }); */
-  // handleClick(this.state, some);
-  /* } */
+  handleDelete = ({ target }) => {
+    const { handleDelete } = this.props;
+    handleDelete(target.id);
+  }
+
+  handleEdit = ({ target }) => {
+    const { expenses } = this.props;
+    this.setState({ buttonEdit: true });
+    const expenseEdited = expenses
+      .find((expense) => Number(expense.id) === Number(target.id));
+    this.setState({
+      value: expenseEdited.value,
+      description: expenseEdited.description,
+      currency: expenseEdited.currency,
+      method: expenseEdited.method,
+      tag: expenseEdited.tag,
+      exchangeRates: expenseEdited.exchangeRates,
+      id: expenseEdited.id,
+    });
+  }
 
   render() {
-    const { value,
-      description,
-      currency,
-      method,
-      tag,
-      coins,
-      buttonEdit } = this.state;
-    const { handleClick, stateWallet } = this.props;
+    const { currencies, expenses } = this.props;
+    const { value, description, currency, method, tag, buttonEdit } = this.state;
+    const table = ['Descrição', 'Tag', 'Método de pagamento', 'Valor', 'Moeda',
+      'Câmbio utilizado', 'Valor convertido', 'Moeda de conversão', 'Editar/Excluir'];
     return (
-      <div>
+      <>
         <Header />
         <form>
-          <label htmlFor="value">
-            Valor de gastos:
+          <label htmlFor="value-input">
+            Valor:
             <input
-              type="text"
-              id="value"
+              type="number"
               data-testid="value-input"
-              name="name"
+              id="value-input"
+              name="value"
               value={ value }
               onChange={ this.handleChange }
             />
           </label>
-          <label htmlFor="description">
-            Descrição da despesa:
+          <label htmlFor="description-input">
+            Descrição:
             <input
               type="text"
-              id="description"
               data-testid="description-input"
-              name="name"
+              id="description-input"
+              name="description"
               value={ description }
               onChange={ this.handleChange }
             />
           </label>
-          <label htmlFor="currency">
-            moeda:
+          <label htmlFor="currency-input">
+            Moeda:
             <select
-              onChange={ this.handleChange }
               name="currency"
-              value={ currency }
+              id="currency-input"
               data-testid="currency-input"
-              id="currency"
-              aria-label="moeda"
+              onChange={ this.handleChange }
+              value={ currency }
             >
-              { coins.length > 0 && coins.map((moedas) => (
+              {currencies && (currencies.map((moedas) => (
                 <option
-                  data-testid={ moedas }
                   key={ moedas }
+                  data-testid={ moedas }
                   value={ moedas }
                 >
                   { moedas }
                 </option>
-              )) }
+              )))}
             </select>
           </label>
-          <select
-            value={ method }
-            onChange={ this.handleChange }
-            data-testid="method-input"
-            id="method"
-          >
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="Cartão de crédito">Cartão de crédito</option>
-            <option value="Cartão de débito">Cartão de débito</option>
-          </select>
-          <select
-            value={ tag }
-            onChange={ this.handleChange }
-            data-testid="tag-input"
-            id="tag"
-          >
-            <option value="Alimentação">Alimentação</option>
-            <option value="Lazer">Lazer</option>
-            <option value="Trabalho">Trabalho</option>
-            <option value="Transporte">Transporte</option>
-            <option value="Saúde">Saúde</option>
-          </select>
-          {buttonEdit ? (
-            <button
-              type="button"
-              onClick={ () => this.editarDespesa }
+          <label htmlFor="method-input">
+            Método de Pagamento:
+            <select
+              name="method"
+              id="method-input"
+              data-testid="method-input"
+              onChange={ this.handleChange }
+              value={ method }
             >
-              Editar Despesas
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={ () => this.saveAndDispatch(handleClick) }
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão de crédito">Cartão de crédito</option>
+              <option value="Cartão de débito">Cartão de débito</option>
+            </select>
+          </label>
+          <label htmlFor="tag-input">
+            Tag:
+            <select
+              name="tag"
+              id="tag-input"
+              data-testid="tag-input"
+              onChange={ this.handleChange }
+              value={ tag }
             >
-              Adicionar Despesas
-            </button>
-          )}
+              <option value="Alimentação">Alimentação</option>
+              <option value="Lazer">Lazer</option>
+              <option value="Trabalho">Trabalho</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Saúde">Saúde</option>
+            </select>
+            {buttonEdit
+              ? <button type="submit" onClick={ this.handleClick }>Editar despesa</button>
+              : (
+                <button
+                  type="submit"
+                  onClick={ this.handleClick }
+                >
+                  Adicionar despesa
+                </button>)}
+          </label>
         </form>
         <table>
           <thead>
             <tr>
-              <th>Descrição</th>
-              <th>Tag</th>
-              <th>Método de pagamento</th>
-              <th>Valor</th>
-              <th>Moeda</th>
-              <th>Câmbio utilizado</th>
-              <th>Valor convertido</th>
-              <th>Moeda de conversão</th>
-              <th>Editar/Excluir</th>
+              {table.map((element) => (<th key={ element }>{element}</th>))}
             </tr>
           </thead>
           <tbody>
-            { stateWallet.expenses && stateWallet.expenses.map((expense) => (
-              <div key={ expense.id } id={ expense.id }>
-                <tr id={ expense.id }>
-                  <td>{ expense.description }</td>
-                  <td>{ expense.tag }</td>
-                  <td>{ expense.method }</td>
-                  <td>{ Number(expense.value).toFixed(2) }</td>
-                  <td>{ expense.exchangeRates[expense.currency].name }</td>
-                  <td>
-                    {
-                      Number(expense.exchangeRates[expense.currency].ask).toFixed(2)
-                    }
-                  </td>
-                  <td>
-                    {
-                      Number(expense.exchangeRates[expense.currency].ask * expense.value)
-                        .toFixed(2)
-                    }
-                  </td>
-                  <td>Real</td>
-                  <th>
-                    <button
-                      type="button"
-                      data-testid="edit-btn"
-                      onClick={ this.editarDespesa }
-                      id={ expense.id }
-                    >
-                      Editar despesa
-                    </button>
-                    <button
-                      type="button"
-                      data-testid="delete-btn"
-                      onClick={ this.deleteDespesa }
-                      id={ expense.id }
-                    >
-                      Deletar
-                    </button>
-                  </th>
-                </tr>
-              </div>
-            )) }
+            {expenses.map((el) => (
+              <tr key={ el.id }>
+                <td>{el.description}</td>
+                <td>{el.tag}</td>
+                <td>{el.method}</td>
+                <td>{Number(el.value).toFixed(2)}</td>
+                <td>{el.exchangeRates[el.currency].name}</td>
+                <td>{Number(el.exchangeRates[el.currency].ask).toFixed(2)}</td>
+                <td>{(el.exchangeRates[el.currency].ask * el.value).toFixed(2)}</td>
+                <td>Real</td>
+                <td>
+                  <button
+                    type="button"
+                    data-testid="edit-btn"
+                    id={ el.id }
+                    onClick={ this.handleEdit }
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="delete-btn"
+                    id={ el.id }
+                    onClick={ this.handleDelete }
+                  >
+                    Deletar
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
-      </div>
+      </>
     );
   }
 }
 
-/* ({ target }) => {
-  const { stateWallet: { expenses, soma }, handleDelete } = this.props;
-  console.log(expenses);
-  console.log(soma);
-  const newTarget = expenses
-    .find((deleted) => Number(deleted.id) === Number(target.id));
-  const valorMult = (
-    Number(newTarget.exchangeRates[newTarget.currency].ask) * Number(newTarget.value)
-  ).toFixed(2);
-  const valorDiminuido = soma - valorMult;
-  console.log(valorDiminuido);
-  handleDelete(newTarget.id, valorDiminuido);
-                      } } */
-
-const mapDispatchToProps = (dispatch) => (
-  {
-    handleClick: (state, some) => {
-      dispatch(saveState(state, some));
-    },
-    handleDelete: (id, soma) => {
-      dispatch(deleteState(id, soma));
-    },
-  });
-
 const mapStateToProps = (state) => ({
-  stateUser: state.user,
-  stateWallet: state.wallet,
+  currencies: state.wallet.currencies,
+  expenses: state.wallet.expenses,
 });
 
-AdicaoDespesas.propTypes = {
+const mapDispatchToProps = (dispatch) => ({
+  handleClick: (coin) => {
+    dispatch(saveCoin(coin));
+  },
+  handleSave: (state) => dispatch(saveExpense(state)),
+  handleDelete: (id) => {
+    dispatch(deleteState(id));
+  },
+  handleEdit: (state) => dispatch(editState(state)),
+});
+
+Wallet.propTypes = {
+  currencies: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+  expenses: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
   handleClick: PropTypes.func.isRequired,
-  stateWallet: PropTypes.string.isRequired,
+  handleSave: PropTypes.func.isRequired,
   handleDelete: PropTypes.func.isRequired,
+  handleEdit: PropTypes.func.isRequired,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(AdicaoDespesas);
+export default connect(mapStateToProps, mapDispatchToProps)(Wallet);

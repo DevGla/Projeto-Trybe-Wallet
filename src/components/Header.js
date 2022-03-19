@@ -16,7 +16,8 @@ class Header extends React.Component {
               stateWallet.expenses.reduce((acc, expense) => {
                 const { value, exchangeRates, currency } = expense;
                 const { ask } = exchangeRates[currency];
-                return acc + (value * ask);
+                const mult = value * ask;
+                return acc + Number(mult.toFixed(2));
               }, 0)
             }
           </p>
@@ -33,8 +34,8 @@ const mapStateToProps = (state) => ({
 });
 
 Header.propTypes = {
-  stateUser: PropTypes.string.isRequired,
-  stateWallet: PropTypes.string.isRequired,
+  stateUser: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+  stateWallet: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
 };
 
 export default connect(mapStateToProps, null)(Header);

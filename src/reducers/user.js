@@ -1,4 +1,5 @@
 // Esse reducer será responsável por tratar as informações da pessoa usuária
+// Esse reducer será responsável por tratar as informações da pessoa usuária
 import { SAVE_EMAIL } from '../actions';
 // import user from './user';
 // import wallet from './wallet';
