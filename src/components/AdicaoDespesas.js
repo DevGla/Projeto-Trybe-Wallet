@@ -56,7 +56,6 @@ class Wallet extends React.Component {
       const obj = { id: expenses.length, value, description, currency, method, tag };
       const data = await requisicaoAPI().then((dataExchange) => dataExchange);
       delete data.USDT;
-      console.log(data);
       const payload = { ...obj, exchangeRates: data };
       handleSave(payload);
     }
